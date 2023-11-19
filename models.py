@@ -3,8 +3,14 @@
 import numpy as np
 from numpy.linalg import norm
 from gensim.models import word2vec
+from gensim.models import keyedvectors
 from rank_bm25 import BM25Okapi
 from sklearn.metrics import ndcg_score
+
+
+## Global variables
+
+model_path = "C:/Thomas/Etudes/ESILV/A9/NLP/Projets/BioWordVec_PubMed_MIMICIII_d200.vec.bin"
 
 
 ## Functions
@@ -22,6 +28,14 @@ def cosine_similarity(X,Y):
     return cosine
 
 
+# Load bioModel, which is pre-trained on a lot of biometric data
+def model_load_bioModel():
+
+    bioModel = keyedvectors.load_word2vec_format(model_path, binary=True)
+
+    return bioModel
+
+
 # Build word2vec model
 def model_word2vec_wordScale(corpus):
 
@@ -30,9 +44,9 @@ def model_word2vec_wordScale(corpus):
     return model
 
 # Vectorize whole text by making mean of vectors of each word.
-def model_word2vec_textScale(text,model):
+def model_word2vec_textScale(text,model,size=100):
 
-    vec = np.zeros(100)
+    vec = np.zeros(size)
     i = 0
 
     for word in text:
@@ -45,7 +59,7 @@ def model_word2vec_textScale(text,model):
     if i != 0:
         vec = vec / i
     else:
-        vec = np.zeros(100)
+        vec = np.zeros(size)
 
     return vec
 
@@ -122,6 +136,70 @@ def model_word2vec_second(results,corpusDicoDocName,corpusDocTokenDic,corpus):
         for doc in docs_to_evaluate:
             doc_content = corpusDocTokenDic[doc]
             docs_to_evaluate_vectorized.append(model_word2vec_textScale(doc_content,model_wordScale))
+
+        req_vectorized = model_word2vec_textScale(req,model_wordScale)
+
+        docs_evaluated = []
+        for doc in docs_to_evaluate_vectorized:
+            docs_evaluated.append(cosine_similarity(req_vectorized,doc))
+
+        # Re-fill result with 0 for other documents
+        res = np.zeros(len(corpusDicoDocName))
+        for j in range(len(docs_evaluated)):
+            res[positions[j]] = docs_evaluated[j]
+
+        model[req] = res
+
+    return model
+
+
+# Vectorize whole text by making mean of vectors of each word.
+def model_bioModel_textScale(text,model,size=100):
+
+    vec = np.zeros(size)
+    i = 0
+
+    for word in text:
+        try:
+            vec = vec + model.word_vec(word)
+            i = i + 1
+        except:
+            continue
+    
+    if i != 0:
+        vec = vec / i
+    else:
+        print("Warning: model_bioModel_textScale, aucun mot reconnu dans le vecteur")
+        vec = np.zeros(size)
+
+    return vec
+
+# Run bioModel on already evaluated results
+def model_bioModel_second(results,corpusDicoDocName,corpusDocTokenDic,corpus):
+
+    model_wordScale = model_load_bioModel()
+
+    model = {}
+
+    # Dictionnary with inverted keys and values of corpusDicoDocName
+    doc_from_position = {}
+    for k,v in corpusDicoDocName.items():
+        doc_from_position[v] = k
+
+    # Get the docs with top results in previous model
+    for req in results:
+        positions = []
+        docs_to_evaluate = []
+        for i in results[req]:
+            if i > 0:
+                positions.append(list(results[req]).index(i))
+                docs_to_evaluate.append(doc_from_position[list(results[req]).index(i)])
+
+        # Vectorize each one of those doc
+        docs_to_evaluate_vectorized = []
+        for doc in docs_to_evaluate:
+            doc_content = corpusDocTokenDic[doc]
+            docs_to_evaluate_vectorized.append(model_word2vec_textScale(doc_content,model_wordScale,200))
 
         req_vectorized = model_word2vec_textScale(req,model_wordScale)
 

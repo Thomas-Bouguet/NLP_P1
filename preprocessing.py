@@ -1,6 +1,5 @@
 ## Libraries
 
-import urllib.request as re
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 import numpy as np
