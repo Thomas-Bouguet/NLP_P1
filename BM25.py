@@ -137,7 +137,7 @@ def run_bm25_only(startDoc,endDoc):
 	ndcgBM25Cumul=0
 	nbReq=0
 	
-	# On prend le top 5
+	# We take the top 5
 	ndcgTop=5
 
 	# For each tokenized request, get the BM25 scores of all documents. Then, get the known true results and calculate the ndcg@5 score.

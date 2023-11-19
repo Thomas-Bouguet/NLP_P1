@@ -23,6 +23,7 @@ def cosine_similarity(X,Y):
     if norm(X)*norm(Y) > 0:
         cosine = np.dot(X,Y)/(norm(X)*norm(Y))
     else:
+        print("Warning: cosine_similarity, non calculée")
         cosine = 0.
     
     return cosine
@@ -161,7 +162,7 @@ def model_bioModel_textScale(text,model,size=100):
 
     for word in text:
         try:
-            vec = vec + model.word_vec(word)
+            vec = vec + model.get_vector(word)
             i = i + 1
         except:
             continue
@@ -199,9 +200,9 @@ def model_bioModel_second(results,corpusDicoDocName,corpusDocTokenDic,corpus):
         docs_to_evaluate_vectorized = []
         for doc in docs_to_evaluate:
             doc_content = corpusDocTokenDic[doc]
-            docs_to_evaluate_vectorized.append(model_word2vec_textScale(doc_content,model_wordScale,200))
+            docs_to_evaluate_vectorized.append(model_bioModel_textScale(doc_content,model_wordScale,200))
 
-        req_vectorized = model_word2vec_textScale(req,model_wordScale)
+        req_vectorized = model_bioModel_textScale(req,model_wordScale,200)
 
         docs_evaluated = []
         for doc in docs_to_evaluate_vectorized:

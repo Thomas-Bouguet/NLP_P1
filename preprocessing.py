@@ -9,13 +9,14 @@ from collections import defaultdict
 # nltk.download('punkt')
 from sklearn.metrics import ndcg_score
 from rank_bm25 import BM25Okapi
+from nltk.stem import WordNetLemmatizer
 
 
 ## Global Variables
 
 dir = "./project1-2023/"
 stopword = stopwords.words('english')
-
+lemmatizer_output=WordNetLemmatizer()
 
 
 # Functions
@@ -73,12 +74,22 @@ def load_data(size=-1):
 
     return dicDoc, dicReq, dicReqDoc
 
+# def text2TokenList(text):
+
+# 	# Tokenize and eliminate stopwords of a given text
+# 	word_tokens = word_tokenize(text.lower())
+# 	word_tokens_without_stops = [word for word in word_tokens if word not in stopword and len(word)>2]
+# 	return word_tokens_without_stops
+
 def text2TokenList(text):
 
 	# Tokenize and eliminate stopwords of a given text
 	word_tokens = word_tokenize(text.lower())
 	word_tokens_without_stops = [word for word in word_tokens if word not in stopword and len(word)>2]
-	return word_tokens_without_stops
+	word_tokens_without_stops_lemmed = []	
+	for word in word_tokens_without_stops:
+		word_tokens_without_stops_lemmed.append(lemmatizer_output.lemmatize(word))
+	return word_tokens_without_stops_lemmed
 
 def tokenize_list(givenList,toKeep):
 
