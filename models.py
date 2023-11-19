@@ -112,7 +112,7 @@ def model_word2vec(corpusDocTokenDic,corpusReqTokenDic,corpus):
     return model
 
 # Run word2vec on already evaluated results
-def model_word2vec_second(results,corpusDicoDocName,corpusDocTokenDic,corpus):
+def model_word2vec_second(results,corpusDicoDocName,corpusDocTokenDic,corpusReqTokenDic,corpus):
 
     model_wordScale = model_word2vec_wordScale(corpus)
 
@@ -138,7 +138,7 @@ def model_word2vec_second(results,corpusDicoDocName,corpusDocTokenDic,corpus):
             doc_content = corpusDocTokenDic[doc]
             docs_to_evaluate_vectorized.append(model_word2vec_textScale(doc_content,model_wordScale))
 
-        req_vectorized = model_word2vec_textScale(req,model_wordScale)
+        req_vectorized = model_word2vec_textScale(corpusReqTokenDic[req],model_wordScale)
 
         docs_evaluated = []
         for doc in docs_to_evaluate_vectorized:
@@ -170,13 +170,13 @@ def model_bioModel_textScale(text,model,size=100):
     if i != 0:
         vec = vec / i
     else:
-        print("Warning: model_bioModel_textScale, aucun mot reconnu dans le vecteur")
+        print("Warning: model_bioModel_textScale, aucun mot reconnu dans le text")
         vec = np.zeros(size)
 
     return vec
 
 # Run bioModel on already evaluated results
-def model_bioModel_second(results,corpusDicoDocName,corpusDocTokenDic,corpus):
+def model_bioModel_second(results,corpusDicoDocName,corpusDocTokenDic,corpusReqTokenDic):
 
     model_wordScale = model_load_bioModel()
 
@@ -202,14 +202,14 @@ def model_bioModel_second(results,corpusDicoDocName,corpusDocTokenDic,corpus):
             doc_content = corpusDocTokenDic[doc]
             docs_to_evaluate_vectorized.append(model_bioModel_textScale(doc_content,model_wordScale,200))
 
-        req_vectorized = model_bioModel_textScale(req,model_wordScale,200)
+        req_vectorized = model_bioModel_textScale(corpusReqTokenDic[req],model_wordScale,200)
 
         docs_evaluated = []
         for doc in docs_to_evaluate_vectorized:
             docs_evaluated.append(cosine_similarity(req_vectorized,doc))
 
         # Re-fill result with 0 for other documents
-        res = np.zeros(len(corpusDicoDocName))
+        res = np.zeros(len(results[req]))
         for j in range(len(docs_evaluated)):
             res[positions[j]] = docs_evaluated[j]
 
